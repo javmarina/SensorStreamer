@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AndroidStudioProjects-SensorStreamer.iml" filepath="$PROJECT_DIR$/.idea/modules/AndroidStudioProjects-SensorStreamer.iml" group="SensorStreamer" />
       <module fileurl="file://$PROJECT_DIR$/SensorStreamer.iml" filepath="$PROJECT_DIR$/SensorStreamer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SensorStreamer-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SensorStreamer-app.iml" group="SensorStreamer/app" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
