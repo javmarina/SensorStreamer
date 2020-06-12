@@ -4,6 +4,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Handler;
 
 import com.google.gson.Gson;
 
@@ -19,6 +20,10 @@ public class JsonPacketComposer implements PacketComposer, SensorEventListener {
     int mTargetCount;
     Json mData;
     Set<Integer> mSeenTypes;
+
+    private boolean running;
+    private final Handler mHandler = new Handler();
+    private Runnable mRunnable;
 
     private class Vector1D {
         public Vector1D(float[] values, long timestamp) {
@@ -133,11 +138,32 @@ public class JsonPacketComposer implements PacketComposer, SensorEventListener {
 
         mSeenTypes = new TreeSet<>();
         mData = new Json();
+
+        final long millis = periodToMillis(period);
+        running = true;
+        // Fragmento de código que se ejecuta de forma periódica
+        // Monta el JSON y lo envía por TCP
+        mRunnable = new Runnable(){
+            @Override
+            public void run() {
+                if (running) {
+                    mSeenTypes.clear();
+                    String packet = new Gson().toJson(mData);
+                    packet += "\r\n";
+                    mListener.onPacketComplete(packet.getBytes());
+                    //mData = new Json();
+
+                    mHandler.postDelayed(mRunnable, millis);
+                }
+            }
+        };
+        mHandler.postDelayed(mRunnable, millis);
     }
 
     @Override
     public void stop() {
         mManager.unregisterListener(this);
+        running = false;
     }
 
     @Override
@@ -185,16 +211,22 @@ public class JsonPacketComposer implements PacketComposer, SensorEventListener {
                 return;
         }
         mSeenTypes.add(new Integer(event.sensor.getType()));
-        if (mSeenTypes.size() == mTargetCount) {
-            mSeenTypes.clear();
-            String packet = new Gson().toJson(mData);
-            packet += "\n";
-            mListener.onPacketComplete(packet.getBytes());
-            mData = new Json();
-        }
-
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    private static long periodToMillis(final int delay) {
+        switch (delay) {
+            case SensorManager.SENSOR_DELAY_NORMAL:
+            default:
+                return 200;
+            case SensorManager.SENSOR_DELAY_UI:
+                return 60;
+            case SensorManager.SENSOR_DELAY_GAME:
+                return 10;
+            case SensorManager.SENSOR_DELAY_FASTEST:
+                return 1; // 0 might be too much
+        }
+    }
 }
